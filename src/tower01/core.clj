@@ -1,14 +1,16 @@
 ;; http://adereth.github.io/blog/2014/04/09/3d-printing-with-clojure/
+;; https://github.com/farrellm/scad-clj/blob/master/src/scad_clj/model.clj
 
 (ns tower01.core
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]))
 
-(def wall 3)
-(def sidetube_n 5)
+(def wall 4)
+(def sidetube_n 6)
 (def sidetube_width 40)
 (def sidetube_height 100)
+(def connector_height 30)
 
 (def width 100)
 (def height 160)
@@ -34,17 +36,32 @@
    (map (partial side_obj obj) (range 1 (+ sidetube_n 1))))
   )
 
+(def connector
+  (difference
+    (cylinder (- width wall) connector_height)
+    (cylinder (- width (* 2 wall)) (+ connector_height 1))
+    
+   
+    (translate [0 0 (+ (/ connector_height 2) 0.1)]
+               (cylinder [(- width (* 2 wall)) width] connector_height))
+    )
+  )
 
 (def tower_base
   (union
+   
    (difference
     (side_objs (tube sidetube_width sidetube_height))
     (cylinder (- width wall) (+ height wall))
     )
+   
    (difference
     (tube width height)
     (side_objs (cylinder sidetube_width sidetube_height))
     )
+
+   (translate [ 0 0 (- (/ height 2)) ] connector)
+   
    )
   )
 
@@ -67,8 +84,14 @@
    )
   )
 
+(def cubesize 200)
+
 (def primitives
-  (stacked_bases 3)
+;;  (difference
+   (stacked_bases 1)
+   ;; (translate [(/ cubesize 2) (/ cubesize 2) 0]
+   ;;            (cube cubesize cubesize cubesize))
+   ;; )
   )
 
 (defn -main
