@@ -1,11 +1,5 @@
 ;; http://adereth.github.io/blog/2014/04/09/3d-printing-with-clojure/
 ;; https://github.com/farrellm/scad-clj/blob/master/src/scad_clj/model.clj
-;;
-;; lein auto run
-;;
-;; in the .scad buffer:
-;; auto-revert-mode 
-;; scad-preview-mode
 
 (ns tower01.core
   (:refer-clojure :exclude [use import])
@@ -13,7 +7,7 @@
             [scad-clj.model :refer :all]))
 
 (def wall 4)
-(def sidetube_n 4)
+(def sidetube_n 5)
 (def sidetube_width 50)
 (def sidetube_height 100)
 (def connector_height 30)
@@ -94,7 +88,7 @@
 
 (def primitives
 ;;  (difference
-   (stacked_bases 1)
+   (stacked_bases 6)
    ;; (translate [(/ cubesize 2) (/ cubesize 2) 0]
    ;;            (cube cubesize cubesize cubesize))
    ;; )

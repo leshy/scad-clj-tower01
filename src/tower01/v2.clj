@@ -1,11 +1,5 @@
 ;; http://adereth.github.io/blog/2014/04/09/3d-printing-with-clojure/
 ;; https://github.com/farrellm/scad-clj/blob/master/src/scad_clj/model.clj
-;;
-;; lein auto run
-;;
-;; in the .scad buffer:
-;; auto-revert-mode 
-;; scad-preview-mode
 
 (ns tower01.core
   (:refer-clojure :exclude [use import])
@@ -13,13 +7,13 @@
             [scad-clj.model :refer :all]))
 
 (def wall 4)
-(def sidetube_n 4)
+(def sidetube_n 3)
 (def sidetube_width 50)
 (def sidetube_height 100)
 (def connector_height 30)
 
-(def width 100)
-(def height 160)
+(def width 70)
+(def height 120)
 
 (defn tube [width height]
   (difference
@@ -31,9 +25,8 @@
 (defn side_obj [obj n]
   (->>
    obj
-   (rotate (/ 3.14 4) [0 1 0])
-   (translate [width 0 0])
-   (rotate (* (/ (* 2 3.14) sidetube_n) n) [0 0 1])
+   (translate [(- width (/ wall 2)) 0 wall])
+   (rotate (* (/ (* 2 pi) sidetube_n) n) [0 0 1])
  )
 )
 
@@ -53,19 +46,36 @@
     )
   )
 
+(defn cradle [csize]
+    (translate [(- (* 2 wall)) 0 0 ]
+               (difference
+                
+                (sphere csize)
+                (translate [0 0 csize]
+                           (cube (* 2 csize) (* 2 csize) (* 2 csize))
+                           )
+                (sphere (- csize wall))
+                (cylinder wall 1000)
+                
+                )
+               )
+    )
+
 (def tower_base
   (union
    
-   (difference
-    (side_objs (tube sidetube_width sidetube_height))
-    (cylinder (- width wall) (+ height wall))
-    )
+   ;; (difference
+   ;;  (side_objs (sphere sidetube_width))
+   ;;  (cylinder (- width wall) (+ height wall))
+   ;;  )
+   
+   (side_objs (cradle  sidetube_width))
    
    (difference
     (tube width height)
-    (side_objs (cylinder sidetube_width sidetube_height))
+    (side_objs (sphere sidetube_width))
     )
-
+   
    (translate [ 0 0 (- (/ height 2)) ] connector)
    
    )
@@ -94,7 +104,7 @@
 
 (def primitives
 ;;  (difference
-   (stacked_bases 1)
+   (stacked_bases 6)
    ;; (translate [(/ cubesize 2) (/ cubesize 2) 0]
    ;;            (cube cubesize cubesize cubesize))
    ;; )
