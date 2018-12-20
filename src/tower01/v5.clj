@@ -13,50 +13,26 @@
             [scad-clj.model :refer :all]))
 
 (def wall 4)
+(def sidetube_n 5)
+(def sidetube_width 50)
+(def sidetube_height 100)
 (def connector_height 30)
 
-(def radius 100)
+(def width 100)
+(def height 160)
 
-(def circumvence (* 2 radius Math/PI))
-
-
-(def sidetube_n 5)
-
-
-
-;;(def sidetube_radius 50)
-;;(def sidetube_height 100)
-
-;; sidetube radius and height are implied by height, sidetube_n and sidetube_spacing
-(def sidetube_spacing wall)
-(def sidetube_radius (/ (- circumvence (* sidetube_n sidetube_spacing)) sidetube_n 2))
-
-(def sidetube_cuth (* sidetube_radius 1.5))
-(def sidetube_cuth_external (+ sidetube_cuth (* wall 2)))
-(def sidetube_cutw sidetube_radius)
-
-(def height (* (* sidetube_radius 2) 1.5))
-
-(def sidetube_length (- (* (/ height 2) (Math/sqrt 2)) (/ wall 2)))
-
-(println "tube diameter" sidetube_radius)
-(println "tube length" sidetube_length)
-(println "tube cut height" sidetube_cuth)
-(println "tube height external" sidetube_cuth_external)
-
-
-(defn tube [radius height]
+(defn tube [width height]
   (difference
-   (cylinder radius height)
-   (cylinder (- radius wall) (+ height wall))
+   (cylinder width height)
+   (cylinder (- width wall) (+ height wall))
    )
   )
 
 (defn side_obj [obj n]
   (->>
    obj
-   (rotate (/ 3.14 2) [0 1 0])
-   (translate [radius 0 0])
+   (rotate (/ 3.14 4) [0 1 0])
+   (translate [width 0 0])
    (rotate (* (/ (* 2 3.14) sidetube_n) n) [0 0 1])
  )
 )
@@ -68,22 +44,22 @@
 
 (def connector
   
-  (let [ bottom_space (/ (- height sidetube_cuth) 2) ]  ;; calculate how much space we have under the tube
-    (translate [0 0 0]
+  (let [ bottom_space (/ (- height (* sidetube_width 1.5)) 2) ]  ;; calculate how much space we have under the tube
+    (translate [0 0 0] 
                (union
                 (difference
 
                  ;; (union
-                 (cylinder (- radius wall) (* connector_height 2))
+                 (cylinder (- width wall) (* connector_height 2))
 
                  ;; (translate [0 0 (/ connector_height -2)]
-                 ;;            (cylinder (+ radius wall) (/ connector_height 2)))
+                 ;;            (cylinder (+ width wall) (/ connector_height 2)))
                  ;; )
 
-                 (cylinder (- radius (* 2 wall)) (+ (* connector_height 2) 1))
+                 (cylinder (- width (* 2 wall)) (+ (* connector_height 2) 1))
 
                  ;; (translate [0 0 (+ connector_height 0.1)]
-                 ;;            (cylinder [(- radius (* 2 wall)) radius] connector_height))
+                 ;;            (cylinder [(- width (* 2 wall)) width] connector_height))
 
                  )
                 )
@@ -96,16 +72,16 @@
   (union
    
    (difference
-    (side_objs (tube sidetube_radius sidetube_length))
-    (cylinder (- radius wall) (+ height wall))
+    (side_objs (tube sidetube_width sidetube_height))
+    (cylinder (- width wall) (+ height wall))
    )
    
    (difference
-    (tube radius height)
-    (side_objs (cylinder sidetube_radius sidetube_length))
+    (tube width height)
+    (side_objs (cylinder sidetube_width sidetube_height))
    )
 
-;;   (translate [ 0 0 (- (/ height 2)) ] connector)
+   (translate [ 0 0 (- (/ height 2)) ] connector)
    
   )
 )
