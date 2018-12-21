@@ -57,9 +57,8 @@
 (defn side_obj [obj n]
   (->>
    obj
-   (rotate (/ Math/PI 4) [0 1 0])
    (translate [radius 0 0])
-   (rotate (* (/ (* 2 3.14) sidetube_n) n) [0 0 1])
+   (rotate (* (/ (* 2 Math/PI) sidetube_n) n) [0 0 1])
    )
   )
 
@@ -68,41 +67,74 @@
    (map (partial side_obj obj) (range 1 (+ sidetube_n 1))))
   )
 
+
+(def connector_cuts
+              (side_objs
+              (rotate (/ Math/PI 2) [0 1 0]
+              (rotate (/ Math/PI 4) [0 0 1]
+                      
+                      (translate [0 0 (/ radius -2)]
+                                 (with-fn 4 (cylinder [0 (/ radius 1.25)] radius)))
+                      ))
+              )
+              )
+  
+
 (def connector_top
-  (union
+   
    ;; (translate [0 0 (/ connector_height -2)]
    ;;            (tube radius connector_height))
-
+   
    (translate [0 0 (* connector_height -0.25)]
-              (tube (- radius wall) (/ connector_height 2)))
+              (difference
+               (tube (- radius wall) (/ connector_height 2))
 
-   )
+
+               (rotate (/ Math/PI 4) [0 0 1]
+
+               connector_cuts
+              )))
   )
 
 
 (def connector_bottom
+  (difference
   (union
    ;; base
+   
    (difference
-    (translate [0 0 (+ (/ connector_height -2) (/ wall 2))]
-               (tube (- radius wall) (+ connector_height wall)))
+
+    (union
+     (translate [0 0 (+ (/ connector_height -2) (/ wall 2))]
+                (tube (- radius (* wall 2)) (+ connector_height wall)))
+     
+     (translate [0 0 (/ wall 2)]
+                (tube (- radius wall) wall))
+     )
+
+    ;; angle
     (translate [0 0 (/ wall 2)]
-               (cylinder [(- radius (* wall 2)) (- radius wall)] (+ wall 0.01))))
+               (cylinder [(- radius (* wall 3)) (- radius wall)] (+ wall 0.001)))
+    
+    )
 
    ;; ;; tooth
-   ;; (translate [0 0 (* connector_height -0.75)]
-   ;;            ;; (difference
-   ;;             (tube radius (/ connector_height 2)))
-   ;;            ;;  (cylinder [(- radius (* wall 2)) (- radius wall)] (+ wall 0.01))))
-   ;;            ;; )
+   (translate [0 0 (* wall -1.5)]
+               (tube (- radius wall) wall)
+              )
    )
+
+
+  connector_cuts
   )
+  )
+
 
 (def connector
  (color [1,0,0,0.5]
          (union
-          ;; (translate
-          ;;  [0 0 (/ height +2)] connector_top)
+          (translate
+           [0 0 (/ height +2)] connector_top)
           (translate
            [0 0 (/ height -2)] connector_bottom)
          )
@@ -112,16 +144,15 @@
 
 (def tower_base
   (union
-   
+      
+
   (color [1,1,1,0.5]
           (difference
-           (side_objs (tube sidetube_r sidetube_length))
-           (cylinder (- radius wall) (+ height wall))
-           )
+           (side_objs (rotate (/ Math/PI 4) [0 1 0] (tube sidetube_r sidetube_length)))
+           (cylinder (- radius wall) (+ height wall)))
           (difference
            (tube radius height)
-           (side_objs (cylinder sidetube_r sidetube_length))
-           )
+           (side_objs (rotate (/ Math/PI 4) [0 1 0] (cylinder sidetube_r sidetube_length))))
          )
 
    connector
@@ -155,7 +186,7 @@
 
 (def primitives
   (difference
-   (stacked_bases 3 wall)
+   (stacked_bases 3 (* wall 3))
    (translate [(/ cubesize 2) (/ cubesize 2) 0]
               (color [1 0 0 1] (cube cubesize cubesize cubesize)))
   )
