@@ -12,17 +12,13 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]))
 
-
 ;; settings
-(def wall 4)
-(def sidetube_n 4)
-(def sidetube_d 50)
+(def wall 3)
+(def sidetube_n 5)
+(def sidetube_d 40)
 (def sidetube_spacing 25)
 
 (def connector_height (* wall 2))
-
-
-
 
 ;; sidetube settings imply main element diameter
 ;; here we calculate the radius
@@ -57,7 +53,6 @@
 (defn side_obj [obj n]
   (->>
    obj
-   (translate [radius 0 0])
    (rotate (* (/ (* 2 Math/PI) sidetube_n) n) [0 0 1])
    )
   )
@@ -68,33 +63,40 @@
   )
 
 
-(def connector_cuts
-              (side_objs
-              (rotate (/ Math/PI 2) [0 1 0]
-              (rotate (/ Math/PI 4) [0 0 1]
-                      
-                      (translate [0 0 (/ radius -2)]
-                                 (with-fn 4 (cylinder [0 (/ radius 1.25)] radius)))
-                      ))
-              )
-              )
-  
+
+(defn triangle [side r]
+  (let [
+        a r
+        b (/ side 2)
+        ]
+    (translate [0 0 -25]
+    (extrude-linear
+     {:height 50 :center false}
+     (polygon [[0 0] [b a] [(- b) a]])
+     ))
+  )
+  )
+
+
+(defn connector_cuts [ratio]
+  (side_objs
+   (rotate (/ Math/PI sidetube_n -2) [0 0 1]
+   (triangle
+    (* diameter (Math/tan (/ Math/PI sidetube_n)))
+    (/ diameter ratio)))
+   )
+  )
+
+(def connector_width (/ radius (/ sidetube_n 2)))
 
 (def connector_top
-   
-   ;; (translate [0 0 (/ connector_height -2)]
-   ;;            (tube radius connector_height))
-   
    (translate [0 0 (* connector_height -0.25)]
               (difference
                (tube (- radius wall) (/ connector_height 2))
-
-
-               (rotate (/ Math/PI 4) [0 0 1]
-
-               connector_cuts
-              )))
+               (rotate (/ Math/PI sidetube_n) [0 0 1] (connector_cuts 1.25)))
+               )
   )
+
 
 
 (def connector_bottom
@@ -125,13 +127,16 @@
    )
 
 
-  connector_cuts
+  (connector_cuts 1.25)
   )
+  
+  
+  
   )
 
 
 (def connector
- (color [1,0,0,0.5]
+ (color [1 0 0,0.5]
          (union
           (translate
            [0 0 (/ height +2)] connector_top)
@@ -148,22 +153,22 @@
 
   (color [1,1,1,0.5]
           (difference
-           (side_objs (rotate (/ Math/PI 4) [0 1 0] (tube sidetube_r sidetube_length)))
+           (side_objs (translate [radius 0 0]  (rotate (/ Math/PI 4) [0 1 0]     (tube sidetube_r sidetube_length))))
            (cylinder (- radius wall) (+ height wall)))
           (difference
            (tube radius height)
-           (side_objs (rotate (/ Math/PI 4) [0 1 0] (cylinder sidetube_r sidetube_length))))
-         )
-
-   connector
-   
+           (side_objs (translate [radius 0 0]  (rotate (/ Math/PI 4) [0 1 0]  (cylinder sidetube_r sidetube_length)))))
+          )
+  
+  connector
+;;   (connector_cuts2 1)
    )
   )
 
 (defn translated_base [explode n]
   (let [angle (* (mod n 2) (/ pi sidetube_n))]
     (->>
-    (color [(mod n 2),(- 1 (mod n 2)),1,1]
+    (color [(mod n 2),(- 1 (mod n 2)),1,0.5]
            tower_base
            )
      (translate [0 0 (* (+ height explode) n)])
@@ -186,10 +191,10 @@
 
 (def primitives
   (difference
-   (stacked_bases 3 (* wall 3))
+   (stacked_bases 1 (* wall 3))
    (translate [(/ cubesize 2) (/ cubesize 2) 0]
               (color [1 0 0 1] (cube cubesize cubesize cubesize)))
-  )
+   )
   )
 
 (defn -main
